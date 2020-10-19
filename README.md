@@ -157,5 +157,52 @@ The server will understand which operation has to be invoked based on the HTTP m
 
 The Richardson’s Maturity Model is used to divide REST based web services in different categories based on how much they follow REST principles. It was developed by Leonard Richardson. It has following levels:
 
+***Developing REST API Using Spring Boot
+
+Spring Boot provides the spring-boot-starter-web starter for developing REST API. This starter can be added using following dependency in pom.xml:
+\n<dependency>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-web</artifactId>\n</dependency>
+
+This starter adds Tomcat as the embedded servlet container which runs on port 8080. You can set a different port number using property server.port in application.properties file. For example, the following code sets port number as 3456:
+\nserver.port = 3456
+
+During application development, you might need to change code many times and for these changes to reflect in application, the application needs to be restarted. Spring Boot provides developer tools using which you can automate this process. To use developer tools, add Spring Boot Dev Tools dependency while creating Spring Boot project. It adds following dependency in pom.xml file: 
+\n<dependency>\n  <groupId>org.springframework.boot</groupId>\n  <artifactId>spring-boot-devtools</artifactId>\n  <optional>true</optional>\n</dependency>
+
+@RestController : This annotation is used to define REST controllers. It is a combination of @Controller and @ResponseBody annotation. @Controller annotation marks a class for discovery by component scanning. @ResponseBody tells Spring that all handler methods in the controller should have their return value written directly to the body of the response, rather than being carried in the model to a view for rendering.
+
+@RequestMapping : This annotation is used to map the HTTP requests to handler methods of REST controllers.  You can use it at class-level or method-level in a controller. The class-level @RequestMapping specifies that any handler methods in this controller will handle requests with specific request path or pattern while method-level makes mappings more specific to handler methods. By default, this annotation matches to all HTTP methods. But usually controller methods should be mapped to a specific HTTP method. For this, you can use method attribute in this annotation. For example, to map an HTTP POST request you can use this annotation as follows:
+
+@RequestMapping(method=RequestMethod.POST)
+
+@GetMapping : This annotation handles HTTP GET request. In CustomerAPI when an HTTP GET request is received for infybank/customers, getAllCustomerDetails() will be called so @GetMapping is used as follows:
+
+@GetMapping(value=\"/customers\")
+
+The return type of getAllCustomerDetails() method is ResponseEntity. ResponseEntity represents the entire HTTP response which includes HTTP response code, response body and response headers. In method implementation, details of all the customers are fetched using CustomerService and then an instance of ResponseEntity is created with customer data and the HttpStatus.OK status code as follows:
+ResponseEntity<List<Customer>> response = new ResponseEntity<List<Customer>>(customerList, HttpStatus.OK);
+    
+@PathVariable : This annotation is used to extract values from URI template into a method parameter. It indicates that a method parameter should be bound to a URI template variable [the one in '{}']. In getCustomerDetails() method, the value attribute of GetMapping annotation takes URI template /customers/{customerId} as parameter where the {customerId} portion of the path is a placeholder. The actual value in the request is given to the customerId parameter, which is mapped to the {customerId} placeholder by @PathVariable. So when HTTP GET request is received for infybank/customers/1 then details of only that customer whose customerId is 1 is fetched.  
+Note that the path variable name and the parameter name should match.  If you want to use a different parameter name, then you could specify the path variable name in the annotation as follows:
+
+n@GetMapping(value = \"/customers/{customerId}\")\npublic ResponseEntity<Customer> getCustomerDetails(@PathVariable(value=\"customerId\") Integer custId) throws Exception{\nCustomer customer = customerService.getCustomer(custId);\nResponseEntity<Customer> response = new ResponseEntity<Customer>(customer, HttpStatus.OK);\nreturn response;\n}
+You can also use @PathVariable("customerId") or @PathVariable(name="customerId"). This annotation can be used in any type of request method (GET, POST, DELETE, etc).  
+
+@PostMapping : This annotation handles HTTP POST request.  In CustomerAPI when an HTTP POST request is received for infybank/customers, then addCustomer() method will be called so @PostMapping is used as follows:
+@PostMapping(value = \"/customers\")\npublic ResponseEntity<String> addCustomer(@RequestBody Customer customer) throws Exception {\n//rest of the code goes here\n}
+
+We know that along with the POST request we have to send customer data. For this customer parameter of addCustomer() method is annotated with @RequestBody  annotation. It ensures that JSON data about customer in the request body is converted to a Customer object.
+
+@PutMapping : This annotation handles HTTP PUT request. In CustomerAPI when an HTTP PUT request is received for infybank/customers/{customerId}, then updateCustomer() method will be called so @PutMapping is used as follows:
+@PutMapping(value = \"/customers/{customerId}\")\npublic ResponseEntity<String> updateCustomer(@PathVariable Integer customerId, @RequestBody Customer customer) throws Exception {\n//rest of the code goes here\n}
+
+@DeleteMapping : This annotation handles HTTP DELETE request.  In CustomerAPI when an HTTP DELETE request is received for infybank/customers/{customerId}, then deleteCustomer() method will be called so @DeleteMapping is used as follows:
+@DeleteMapping(value = \"/customers/{customerId}\")\npublic ResponseEntity<String> deleteCustomer(@PathVariable Integer customerId) throws Exception {\n//rest of the code goes here\n}
+
+@RequestParam : So far you have learned that using path variable you can extract values from URI template. But sometimes the request contains information as query string. A query string in part of URL and contains key-value pair. For example, consider the following URL:
+http://localhost:8080/infybank/customers?customerId=1234&name=Smith
+In above URL customerId=1234&name=Smith is query string with key customerId and name. The value of cutomerId is 1234 and value of name is Smith.
+
+Using @RequestParam annotation you can bind values of query string to the controller method parameters. For example following handler method is mapped with the request /customers?customerId = 12345 :
+@GetMapping(value = \"/customers\")\npublic ResponseEntity<String> getCustomer(@RequestParam Integer customerId) throws Exception {\n//rest of the code goes here\n}
 
 
